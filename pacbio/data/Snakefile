@@ -1,0 +1,53 @@
+with open('accessions_subset.txt', 'rt') as fp:
+    ACCESSIONS = fp.readlines()
+    ACCESSIONS = [ line.strip() for line in ACCESSIONS ]
+    
+print(f'ACCESSIONS is a Python list of length {len(ACCESSIONS)}')
+print(ACCESSIONS)
+
+rule all:
+    input:
+        expand("aligned/{acc}.frem_ref_hifi.bam.specific.vcf", acc=ACCESSIONS)
+
+rule pbmm2_align:
+    input:
+        "{reference}.mmi",
+        "frem_reads/{query}.fastq.gz",
+    output:
+        "aligned/{query}.{reference}.bam",
+    log:
+        "logs/pbmm2_align/{query}.{reference}.log",
+    shell:
+        """
+        pbmm2 align {input} {output} --preset HIFI
+        """
+
+rule sort_bam:
+    input: "aligned/{query}.{reference}.bam"
+    output: "aligned/{query}.{reference}.bam.sorted"
+    shell: """
+        samtools sort {input} > {output}
+    """
+    
+rule call_variants:
+    input:
+        bam="aligned/{query}.{reference}.bam.sorted",
+        ref="{reference}.mmi",
+    output:
+        pileup="aligned/{query}.{reference}.pileup",
+        bcf="aligned/{query}.{reference}.bcf",
+        vcf="aligned/{query}.{reference}.sensitive.vcf",
+    shell: """
+        bcftools mpileup -Ou -f {input.ref} {input.bam} > {output.pileup}
+        bcftools call -mv -Ob {output.pileup} -o {output.bcf}
+        bcftools view {output.bcf} > {output.vcf} 
+    """
+    
+rule filter:
+    input: "aligned/{query}.{reference}.sensitive.vcf"
+    output: "aligned/{query}.{reference}.specific.vcf"
+    shell:"""
+        bcftools filter -Ov -e 'QUAL<40 || DP<10 || GT!="1/1"' {input} > {output}
+    """
+    
+
