@@ -7,47 +7,28 @@ print(ACCESSIONS)
 
 rule all:
     input:
-        expand("aligned/{acc}.frem_ref_hifi.bam.specific.vcf", acc=ACCESSIONS)
-
-rule pbmm2_align:
+        expand("results/filtered_fastqs/{acc}.fastq.gz", acc=ACCESSIONS),
+        expand("results/filtered_fastqs/{acc}.fastq.gz", acc=ACCESSIONS),
+        
+rule fastp:
     input:
-        "{reference}.mmi",
-        "frem_reads/{query}.fastq.gz",
+        r1 = "frem_reads/{query}_{loop}_R1_001.fastq.gz",
+        r2 = "frem_reads/{query}_{loop}_R2_001.fastq.gz"
     output:
-        "aligned/{query}.{reference}.bam",
+        r1 = "results/filtered_fastqs/{query}_{loop}_R1_001.fastq.gz",
+        r2 = "results/filtered_fastqs/{query}_{loop}_R2_001.fastq.gz",
+        summ = "results/summary_stats/{query}_{loop}.fastp.out"
+    conda:
+        "../envs/fastq2bam.yml"
     log:
-        "logs/pbmm2_align/{query}.{reference}.log",
+        "logs/fastp/{query}/{loop}.txt"
+    benchmark:
+        "benchmarks/fastp/{query}/{loop}.txt"
     shell:
-        """
-        pbmm2 align {input} {output} --preset HIFI
-        """
-
-rule sort_bam:
-    input: "aligned/{query}.{reference}.bam"
-    output: "aligned/{query}.{reference}.bam.sorted"
-    shell: """
-        samtools sort {input} > {output}
-    """
-    
-rule call_variants:
-    input:
-        bam="aligned/{query}.{reference}.bam.sorted",
-        ref="{reference}.mmi",
-    output:
-        pileup="aligned/{query}.{reference}.pileup",
-        bcf="aligned/{query}.{reference}.bcf",
-        vcf="aligned/{query}.{reference}.sensitive.vcf",
-    shell: """
-        bcftools mpileup -Ou -f {input.ref} {input.bam} > {output.pileup}
-        bcftools call -mv -Ob {output.pileup} -o {output.bcf}
-        bcftools view {output.bcf} > {output.vcf} 
-    """
-    
-rule filter:
-    input: "aligned/{query}.{reference}.sensitive.vcf"
-    output: "aligned/{query}.{reference}.specific.vcf"
-    shell:"""
-        bcftools filter -Ov -e 'QUAL<40 || DP<10 || GT!="1/1"' {input} > {output}
-    """
-    
+        "fastp --in1 {input.r1} --in2 {input.r2} "
+        "--out1 {output.r1} --out2 {output.r2} "
+        "--thread {threads} "
+        "--detect_adapter_for_pe "
+        "-j /dev/null -h /dev/null "
+        "2> {output.summ} > {log}"
 
