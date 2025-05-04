@@ -1,0 +1,13 @@
+FILES = ["blm_frem_raw_no70"]
+         
+rule all:
+    input:
+        expand("{file}{ext}", file=FILES, ext=['.dist'])
+        
+rule dist:
+    input:
+        "../../data/blm_frem_raw_no70.vcf"
+    output:
+        "{sample}"
+    shell:
+        "plink --vcf {input} --out {output} --allow-extra-chr --autosome-num 95 --distance square --const-fid"

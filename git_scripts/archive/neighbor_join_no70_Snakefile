@@ -1,0 +1,22 @@
+
+         
+         
+rule all:
+    input:
+        expand("tree_out/blm_frem_raw.noN.LDpruned.{i}.{ext}", i=['0','1','2'], ext=['edges.gz','llik','modelcov.gz','treeout.gz','vertices.gz','cov.gz','covse.gz'])
+        
+rule freq:
+    input:
+        "../../data/blm_frem_raw_no70.vcf"
+    output:
+        "../../data/blm_frem_raw_no70.frq.strat.gz"
+    shell:
+        "bash vcf2frq.strat.sh ../../data/blm_frem_raw_no70.vcf blm_frem_raw_no70.clust"
+        
+rule dist:
+    input:
+        "../../data/blm_frem_raw_no70.vcf"
+    output:
+        "{sample}"
+    shell:
+        "plink --vcf {input} --out {output} --allow-extra-chr --autosome-num 95 --distance square --const-fid"

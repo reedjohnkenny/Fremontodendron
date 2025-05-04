@@ -1,0 +1,37 @@
+
+rule all:
+    input:
+        "blm_frem_raw_no70.LDpruned.min4.fasta.treefile"
+        
+         
+rule LD_prune:
+    input:
+        "../../data/blm_frem_raw_no70.vcf"
+    output:
+        "../../data/blm_frem_raw_no70.LDpruned.vcf.gz"
+    conda:"plink"
+    shell:
+        "./ldPruning.sh {input}" 
+
+
+rule vcf2phylip:
+    input:
+        "../../data/blm_frem_raw_no70.LDpruned.vcf.gz"
+    output:
+        "blm_frem_raw_no70.LDpruned.min4.fasta"
+    conda:"base"
+    shell:
+        "python3 vcf2phylip.py -i {input} \
+ -f -r"
+        
+
+rule iqtree1:
+    input:
+        "blm_frem_raw_no70.LDpruned.min4.fasta"
+    output:
+        "blm_frem_raw_no70.LDpruned.min4.fasta.treefile"
+    conda:"iqtree"
+    shell:
+        "iqtree -s {input} -B 1000 -nt AUTO"
+        
+

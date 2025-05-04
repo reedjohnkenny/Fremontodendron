@@ -1,0 +1,74 @@
+
+FILES = ["blm_frem_raw_no70_no70"]
+         
+
+rule all:
+    input:
+        expand("{file}{ext}", file=FILES, ext=['.het','.idepth','.imiss','.ldepth.mean','.lmiss','.lqual'])
+        
+rule bgzip:
+    input:
+        "../../data/blm_frem_raw_no70_no70.vcf"
+    output:
+        "blm_frem_raw_no70.vcf.gz"  
+    shell:
+        "bgzip -c {input} > {output}"
+        
+
+rule index:
+    input:
+        "blm_frem_raw_no70.vcf.gz"
+    output:
+        "blm_frem_raw_no70.vcf.gz.csi"  
+    shell:
+        "bcftools index {input}"
+        
+rule depth:
+    input:
+        "blm_frem_raw_no70.vcf.gz"
+    output:
+        "blm_frem_raw_no70.idepth"  
+    shell:
+        "vcftools --gzvcf {input} --depth --out blm_frem_raw_no70"
+        
+rule mean_depth:
+    input:
+        "blm_frem_raw_no70.vcf.gz"
+    output:
+        "blm_frem_raw_no70.ldepth.mean"  
+    shell:
+        "vcftools --gzvcf {input} --site-mean-depth --out blm_frem_raw_no70"
+        
+rule qual:
+    input:
+        "blm_frem_raw_no70.vcf.gz"
+    output:
+        "blm_frem_raw_no70.lqual"  
+    shell:
+        "vcftools --gzvcf {input} --site-quality --out blm_frem_raw_no70"
+        
+rule indv_miss:
+    input:
+        "blm_frem_raw_no70.vcf.gz"
+    output:
+        "blm_frem_raw_no70.imiss"  
+    shell:
+        "vcftools --gzvcf {input} --missing-indv --out blm_frem_raw_no70" 
+        
+rule site_miss:
+    input:
+        "blm_frem_raw_no70.vcf.gz"
+    output:
+        "blm_frem_raw_no70.lmiss"  
+    shell:
+        "vcftools --gzvcf {input} --missing-site --out blm_frem_raw_no70" 
+        
+rule het:
+    input:
+        "blm_frem_raw_no70.vcf.gz"
+    output:
+        "blm_frem_raw_no70.het"  
+    shell:
+        "vcftools --gzvcf {input} --het --out blm_frem_raw_no70"        
+
+        

@@ -1,0 +1,57 @@
+FILES = ["45-Fremontodendron_filteredQC"]
+         
+rule all:
+    input:
+        expand("{file}.{k}.Q", file=FILES, k=range(1, 10)),
+        expand("{file}_fix.bim", file=FILES)
+        
+rule prune:
+    input:
+        "../../all_data/QC/{sample}.vcf.gz"
+    output:
+        "{sample}.prune.in",
+        "{sample}.prune.out"
+    shell:
+        "plink --vcf {input} --double-id --allow-extra-chr \
+        --set-missing-var-ids @:# \
+        --indep-pairwise 50 10 0.1 --out {wildcards.sample}"
+
+rule bed:
+    input:
+        "../../all_data/QC/{sample}.vcf.gz",
+        "{sample}.prune.in"
+    output:
+        "{sample}.fam",
+        "{sample}.bed",
+        "{sample}.bim"
+    conda: "plink"
+    shell:
+        "plink --vcf ../../all_data/QC/{wildcards.sample}.vcf.gz --double-id --allow-extra-chr --set-missing-var-ids @:# \
+        --extract {wildcards.sample}.prune.in \
+        --make-bed --out {wildcards.sample}"
+        
+rule bim:
+    input:
+        "{sample}.bim"
+    output:
+        "{sample}_fix.bim"
+    shell:
+        """awk "{{\\$1=\"0\";print \\$0}}" {input} > {output}
+        cp {wildcards.sample}_fix.bim {wildcards.sample}.bim"""
+         
+        
+rule admix:
+    input:
+        "{sample}.bed",
+        "{sample}_fix.bim",
+        "{sample}.fam"
+    output:
+        "{sample}.{k}.P",
+        "{sample}.{k}.Q"
+    shell:
+        "admixture --cv=10 {wildcards.sample}.bed {wildcards.k} > \
+        {wildcards.sample}.{wildcards.k}.out"
+
+        
+        
+        

@@ -1,0 +1,43 @@
+ with open("contig_vcfs/chr_names.txt") as f:
+        # Read lines from the file and store them in a list
+        CHR = [line.strip() for line in f]
+        
+rule all:
+    input:
+        expand(["output/{chr}/{rep}/{chr}.ps21.txt"], chr=CHR, rep = range(1, 21)),
+        expand(["output/pop/{chr}/{rep}/{chr}.ps21.txt"], chr=CHR, rep = range(1, 21))
+ 
+rule elai:
+    input:
+        "bimbam/{chr_name}/cal.recode.geno.txt",
+        "bimbam/{chr_name}/dec.recode.geno.txt",
+        "bimbam/{chr_name}/aff_dec.recode.geno.txt"
+    output:
+        "output/{chr_name}/{rep}/{chr_name}.ps21.txt"
+    shell:
+        "./elai-mt -g bimbam/{wildcards.chr_name}/cal.recode.geno.txt -p 10 \
+        -g bimbam/{wildcards.chr_name}/dec.recode.geno.txt -p 11 \
+        -g bimbam/{wildcards.chr_name}/aff_dec.recode.geno.txt -p 1 \
+        -pos bimbam/{wildcards.chr_name}/dec.recode.pos.txt \
+        -s 30 -C 2 -c 10 -mg 100 -R \
+        -o {wildcards.chr_name}/{wildcards.rep}/{wildcards.chr_name} || true"
+        
+rule elai_pop:
+    input:
+        "bimbam_pop/{chr_name}/knox.recode.geno.txt",
+        "bimbam_pop/{chr_name}/158.recode.geno.txt",
+        "bimbam_pop/{chr_name}/dec.recode.geno.txt",
+        "bimbam_pop/{chr_name}/aff_dec.recode.geno.txt"
+    output:
+        "output/pop/{chr_name}/{rep}/{chr_name}.ps21.txt"
+    shell:
+        "./elai-mt -g bimbam_pop/{wildcards.chr_name}/knox.recode.geno.txt -p 10 \
+        -g bimbam_pop/{wildcards.chr_name}/dec.recode.geno.txt -p 11 \
+        -g bimbam_pop/{wildcards.chr_name}/158.recode.geno.txt -p 12 \
+        -g bimbam/{wildcards.chr_name}/aff_dec.recode.geno.txt -p 1 \
+        -pos bimbam/{wildcards.chr_name}/dec.recode.pos.txt \
+        -s 30 -C 3 -c 15 -mg 100 -R \
+        -o pop/{wildcards.chr_name}/{wildcards.rep}/{wildcards.chr_name} || true"
+ 
+ 
+ 

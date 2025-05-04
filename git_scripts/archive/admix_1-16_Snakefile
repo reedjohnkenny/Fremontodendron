@@ -1,0 +1,46 @@
+FILES = ["blm_frem_raw"]
+         
+rule all:
+    input:
+        expand("{file}.{k}.Q", file=FILES, k=range(1, 17))
+        
+rule bim:
+    priority: 1
+    input:
+        "../plink/{sample}.bim"
+    output:
+        "{sample}.bim"
+    shell:
+        """awk "{{\\$1=\"0\";print \\$0}}" {input} > {wildcards.sample}.bim"""
+         
+rule bed:
+    input:
+        "../plink/{sample}.bed"
+    output:
+        "{sample}.bed"
+    shell:
+        "cp {input} ./{wildcards.sample}.bed" 
+        
+rule fam:
+    input:
+        "../plink/{sample}.fam"
+    output:
+        "{sample}.fam"
+    shell:
+        "cp {input} ./{wildcards.sample}.fam"
+        
+rule admix:
+    input:
+        "{sample}.bed",
+        "{sample}.bim",
+        "{sample}.fam"
+    output:
+        "{sample}.{k}.P",
+        "{sample}.{k}.Q"
+    shell:
+        "admixture --cv=10 {wildcards.sample}.bed {wildcards.k} > \
+        {wildcards.sample}.{wildcards.k}.out"
+
+        
+        
+        

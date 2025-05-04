@@ -1,0 +1,88 @@
+FILES = ["blm_frem_nodec"]
+         
+rule all:
+    input:
+        expand("{file}.{k}.Q", file=FILES, k=range(1, 10))
+        
+rule vcf:
+    input:
+        "../../data/blm_frem_raw.vcf"
+    output:
+        "blm_frem_nodec.vcf"
+    conda:"filter_vcf"
+    shell:
+        "bcftools view -S blm_frem_nodec.txt -o blm_frem_nodec.vcf ../../data/blm_frem_raw.vcf"
+        
+        
+rule prune:
+    input:
+        "{sample}.vcf"
+    output:
+        "plink/{sample}.prune.in",
+        "plink/{sample}.prune.out"
+    conda:"plink"
+    shell:
+        "plink --vcf {input} --double-id --allow-extra-chr \
+        --set-missing-var-ids @:# \
+        --indep-pairwise 50 10 0.1 --out plink/{wildcards.sample}"
+        
+
+rule pca:
+    input:
+        "{sample}.vcf",
+        "plink/{sample}.prune.in"
+    output:
+        "plink/{sample}.eigenval",
+        "plink/{sample}.eigenvec",
+        "plink/{sample}.fam",
+        "plink/{sample}.bed",
+        "plink/{sample}.bim"
+    conda:"plink"
+    shell:
+        "plink --vcf {wildcards.sample}.vcf --double-id --allow-extra-chr --set-missing-var-ids @:# \
+        --extract plink/{wildcards.sample}.prune.in \
+        --make-bed --pca --out plink/{wildcards.sample}"
+        
+rule bim:
+    input:
+        "plink/{sample}.bim"
+    output:
+        "{sample}.bim"
+    conda:"plink"
+    shell:
+        """awk "{{\\$1=\"0\";print \\$0}}" {input} > {wildcards.sample}.bim"""
+         
+rule bed:
+    input:
+        "plink/{sample}.bed"
+    output:
+        "{sample}.bed"
+    conda:"plink"
+    shell:
+        "cp {input} ./{wildcards.sample}.bed" 
+        
+rule fam:
+    input:
+        "plink/{sample}.fam"
+    output:
+        "{sample}.fam"
+    conda: "plink"
+    shell:
+        "cp {input} ./{wildcards.sample}.fam"
+        
+rule admix:
+    input:
+        "{sample}.bed",
+        "{sample}.bim",
+        "{sample}.fam"
+    output:
+        "{sample}.{k}.P",
+        "{sample}.{k}.Q"
+    conda: "admixture"
+    shell:
+        "admixture --cv=10 {wildcards.sample}.bed {wildcards.k} > \
+        {wildcards.sample}.{wildcards.k}.out"
+
+        
+        
+        

@@ -1,0 +1,17 @@
+FILES = ["blm_frem_filter_1.recode",
+         "blm_frem_filter_2.recode",
+         "blm_frem_filter_3.recode",
+         "blm_frem_filter_4.recode",
+         "blm_frem_raw"]
+         
+rule all:
+    input:
+        expand("{file}{ext}", file=FILES, ext=['.dist'])
+        
+rule dist:
+    input:
+        "../../data/{sample}.vcf"
+    output:
+        "{sample}"
+    shell:
+        "plink --vcf {input} --out {output} --allow-extra-chr --autosome-num 95 --distance square --const-fid"

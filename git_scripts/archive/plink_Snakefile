@@ -1,0 +1,42 @@
+
+FILES = ["blm_frem_filter_1.recode",
+         "blm_frem_filter_2.recode",
+         "blm_frem_filter_3.recode",
+         "blm_frem_filter_4.recode",
+         "blm_frem_raw",
+         "blm_frem_raw_subset"]
+         
+rule all:
+    input:
+        expand("{file}{ext}", file=FILES, ext=['.eigenval','.eigenvec','.bim','.bed','.fam','.prune.in','.prune.out'])
+        
+
+rule prune:
+    input:
+        "../../data/{sample}.vcf"
+    output:
+        "{sample}.prune.in",
+        "{sample}.prune.out"
+    shell:
+        "plink --vcf {input} --double-id --allow-extra-chr \
+        --set-missing-var-ids @:# \
+        --indep-pairwise 50 10 0.1 --out {wildcards.sample}"
+        
+
+rule pca:
+    input:
+        "../../data/{sample}.vcf",
+        "{sample}.prune.in"
+    output:
+        "{sample}.eigenval",
+        "{sample}.eigenvec",
+        "{sample}.fam",
+        "{sample}.bed",
+        "{sample}.bim"
+    shell:
+        "plink --vcf ../../data/{wildcards.sample}.vcf --double-id --allow-extra-chr --set-missing-var-ids @:# \
+        --extract {wildcards.sample}.prune.in \
+        --make-bed --pca --out {wildcards.sample}"
+        
+        
+            

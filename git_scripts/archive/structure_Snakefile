@@ -1,0 +1,16 @@
+
+         
+rule all:
+    input:
+        expand("output/blm_frem_no70_subset.str.out.{k}_f", k=range(2,6), rep = range(0,5))
+        
+rule structure:
+    input:
+        "blm_frem_no70_subset.structure"
+    output:
+        "output/blm_frem_no70_subset.str.out.{k}_f"
+    shell:
+        "structure -K {wildcards.k} \
+        -o ouput/blm_frem_no70_subset.str.out.{wildcards.k} \
+        > output/blm_frem_no70_subset.str.out.{wildcards.k}.log"
+         

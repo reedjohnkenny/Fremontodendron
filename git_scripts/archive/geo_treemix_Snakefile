@@ -1,0 +1,96 @@
+import random
+         
+rule all:
+    input:
+        expand("test_m/{mig}/blm_frem_geopop.noN.LDpruned.{rep}.{ext}", mig=range(1, 11), rep=range(1, 11), ext=['edges.gz','llik','modelcov.gz','treeout.gz','vertices.gz','cov.gz','covse.gz']),
+
+        
+rule to_treemix:
+    input:
+        "blm_frem_geopop.noN.LDpruned.vcf.gz",
+        "blm_frem_geopop.clust"
+    output:
+        "blm_frem_geopop.noN.LDpruned.treemix.frq.gz"
+    shell:
+        "./vcf2treemix.sh {input}"
+        
+rule treemix_bootstraps:
+    input:
+        "blm_frem_geopop.noN.LDpruned.treemix.frq.gz"
+    output:
+        "bootstrap/blm_frem_geopop.noN.LDpruned.{i}.edges.gz",
+        "bootstrap/blm_frem_geopop.noN.LDpruned.{i}.llik",
+        "bootstrap/blm_frem_geopop.noN.LDpruned.{i}.modelcov.gz",
+        "bootstrap/blm_frem_geopop.noN.LDpruned.{i}.treeout.gz",
+        "bootstrap/blm_frem_geopop.noN.LDpruned.{i}.vertices.gz",
+        "bootstrap/blm_frem_geopop.noN.LDpruned.{i}.cov.gz",
+        "bootstrap/blm_frem_geopop.noN.LDpruned.{i}.covse.gz"
+    params:
+        seed_value=lambda wildcards: random.randint(1, 1000)  # Generate a random seed value for each invocation
+    conda:"plink"
+    shell:
+        "treemix -i {input} \
+        -bootstrap \
+        -seed {params.seed_value} \
+        -o bootstrap/blm_frem_geopop.noN.LDpruned.{wildcards.i} \
+        -k 500 > logs/treemix_{wildcards.i}_log"
+
+rule gunzip:
+    input:
+        "bootstrap/blm_frem_geopop.noN.LDpruned.{i}.treeout.gz"
+    output:
+        "bootstrap/blm_frem_geopop.noN.LDpruned.{i}.treeout"
+    conda:"plink"
+    shell:
+        "gunzip -c {input} > {output}"
+        
+rule cat_trees:
+    input:
+        expand("bootstrap/blm_frem_geopop.noN.LDpruned.{i}.treeout", i=range(1, 501))
+    output:
+        "all.trees"
+    conda:"plink"
+    shell:
+        "cat bootstrap/*.treeout > all.trees"
+        
+rule contree:
+    input:
+        "all.trees"
+    output:
+        "all.trees.contree"
+    conda: "iqtree"
+    shell:
+        "iqtree -con all.trees"
+        
+rule no_support:
+    input:
+        "all.trees"
+    output:
+        "all.trees.contree"
+    conda: "iqtree"
+    shell:
+        "iqtree -con all.trees"
+    
+rule treemix_test_m:
+    input:
+        "blm_frem_geopop.noN.LDpruned.treemix.frq.gz"
+    output:
+        "test_m/{mig}/blm_frem_geopop.noN.LDpruned.{rep}.edges.gz",
+        "test_m/{mig}/blm_frem_geopop.noN.LDpruned.{rep}.llik",
+        "test_m/{mig}/blm_frem_geopop.noN.LDpruned.{rep}.modelcov.gz",
+        "test_m/{mig}/blm_frem_geopop.noN.LDpruned.{rep}.treeout.gz",
+        "test_m/{mig}/blm_frem_geopop.noN.LDpruned.{rep}.vertices.gz",
+        "test_m/{mig}/blm_frem_geopop.noN.LDpruned.{rep}.cov.gz",
+        "test_m/{mig}/blm_frem_geopop.noN.LDpruned.{rep}.covse.gz"
+    conda:"plink"
+    shell:
+        "treemix -i {input} \
+        -global \
+        -m {wildcards.mig} \
+        -o test_m/{wildcards.mig}/blm_frem_geopop.noN.LDpruned.{wildcards.rep} \
+        -k 500 \
+        -tf all.trees.contree"
+
+        
+        
+        

@@ -1,0 +1,27 @@
+
+rule all:
+    input:
+        "frem_f4.noN.LDpruned.min1.phy.treefile"
+        
+
+
+rule vcf2phylip:
+    input:
+        "../../admixtools/frem_f4.noN.LDpruned.vcf.gz"
+    output:
+        "frem_f4.noN.LDpruned.min1.phy"
+    conda:"base"
+    shell:
+        "python3 vcf2phylip/vcf2phylip.py -i {input} --output-prefix frem_f4.noN.LDpruned -m 1"
+        
+
+rule iqtree:
+    input:
+        "frem_f4.noN.LDpruned.min1.phy"
+    output:
+        "frem_f4.noN.LDpruned.min1.phy.treefile"
+    conda:"iqtree"
+    shell:
+        "iqtree -s {input} -B 1000 -nt AUTO"
+        
+

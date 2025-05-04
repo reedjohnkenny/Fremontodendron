@@ -1,0 +1,103 @@
+
+FILES = ["blm_frem_filter_1.recode_subset",
+         "blm_frem_filter_2.recode_subset",
+         "blm_frem_filter_3.recode_subset",
+         "blm_frem_filter_4.recode_subset",
+         "blm_frem_raw_subset"]
+         
+
+rule all:
+    input:
+        expand("{file}{ext}", file=FILES, ext=['.het','.idepth','.imiss','.ldepth.mean','.lmiss','.lqual','.stats'])
+ 
+rule random_sample:
+    input:
+        "../../data/{sample}.vcf"
+    output:
+        "../../data/{sample}_subset.vcf"  
+    shell:
+        "vcfrandomsample -r 0.0025 ../../data/{wildcards.sample}.vcf > ../../data/{wildcards.sample}_subset.vcf"
+        
+rule bgzip:
+    input:
+        "../../data/{sample}.vcf"
+    output:
+        "../../data/{sample}.vcf.gz"  
+    shell:
+        "bgzip {input}"
+        
+
+rule vcf_stats:
+    input:
+        "../../data/{sample}.vcf"
+    output:
+        "{sample}.stats"  
+    shell:
+        "bcftools stats {input} > {output}"
+        
+
+rule index:
+    input:
+        "../../data/{sample}.vcf.gz"
+    output:
+        "../../data/{sample}.vcf.gz.csi"  
+    shell:
+        "bcftools index {sample}"
+        
+rule max_alleles:
+    input:
+        "../../data/{sample}.vcf.gz"
+    output:
+        "{sample}.frq"  
+    shell:
+        "vcftools --gzvcf {input} --freq2 --max-alleles 2 --out {wildcards.sample}"
+        
+rule depth:
+    input:
+        "../../data/{sample}.vcf.gz"
+    output:
+        "{sample}.idepth"  
+    shell:
+        "vcftools --gzvcf {input} --depth --out {wildcards.sample}"
+        
+rule mean_depth:
+    input:
+        "../../data/{sample}.vcf.gz"
+    output:
+        "{sample}.ldepth.mean"  
+    shell:
+        "vcftools --gzvcf {input} --site-mean-depth --out {wildcards.sample}"
+        
+rule qual:
+    input:
+        "../../data/{sample}.vcf.gz"
+    output:
+        "{sample}.lqual"  
+    shell:
+        "vcftools --gzvcf {input} --site-quality --out {wildcards.sample}"
+        
+rule indv_miss:
+    input:
+        "../../data/{sample}.vcf.gz"
+    output:
+        "{sample}.imiss"  
+    shell:
+        "vcftools --gzvcf {input} --missing-indv --out {wildcards.sample}" 
+        
+rule site_miss:
+    input:
+        "../../data/{sample}.vcf.gz"
+    output:
+        "{sample}.lmiss"  
+    shell:
+        "vcftools --gzvcf {input} --missing-site --out {wildcards.sample}" 
+        
+rule het:
+    input:
+        "../../data/{sample}.vcf.gz"
+    output:
+        "{sample}.het"  
+    shell:
+        "vcftools --gzvcf {input} --het --out {wildcards.sample}"        
+
+        

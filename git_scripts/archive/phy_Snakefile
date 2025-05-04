@@ -1,0 +1,26 @@
+
+rule all:
+    input:
+        "blm_frem_raw.noN.LDpruned.min1.fasta.varsites.phy.treefile"
+
+
+rule vcf2phylip:
+    input:
+        "../treemix/blm_frem_raw.noN.LDpruned.vcf.gz"
+    output:
+        "blm_frem_raw.noN.LDpruned.min1.fasta"
+    conda:"base"
+    shell:
+        "python3 vcf2phylip/vcf2phylip.py -i {input} \
+ -f -r -m 1"
+        
+
+rule iqtree:
+    input:
+        "blm_frem_raw.noN.LDpruned.min1.fasta.varsites.phy"
+    output:
+        "blm_frem_raw.noN.LDpruned.min1.fasta.varsites.phy.treefile"
+    conda:"iqtree"
+    shell:
+        "iqtree -s {input} -m GTR+ASC -B 1000 -nt AUTO"
+

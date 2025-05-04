@@ -1,0 +1,20 @@
+with open("samps.txt") as f:
+        # Read lines from the file and store them in a list
+        SAMP = [line.strip() for line in f]
+        
+rule all:
+    input:
+        expand("fastqc_out/{file}{ext}", file=SAMP, ext=['_fastqc.html','_fastqc.zip'])
+        
+rule make_fastqc:
+    input:
+        "../../../data/frem_reads/{sample}.fastq.gz"
+    output:
+        "fastqc_out/{sample}_fastqc.html",
+        "fastqc_out/{sample}_fastqc.zip"  
+    shell:
+        "fastqc {input} -o fastqc_out"
+        
+        
+
+        

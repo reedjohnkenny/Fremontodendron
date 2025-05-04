@@ -1,0 +1,60 @@
+
+         
+         
+rule all:
+    input:
+        expand("test_m/{root}/frem_f4.noN.LDpruned.edit.mig{i}.k{k}.rep{r}.{ext}", root=['F._mexicanum', '158_F.cal', 'Knox_F.cal', 'Pine_Hill_F.dec'], i=range(1, 12), k= [100, 500, 1000, 5000, 10000], r = range(1, 11), ext=['edges.gz','llik','modelcov.gz','treeout.gz','vertices.gz','cov.gz','covse.gz']),
+        #expand("final_tree/frem_f4.noN.LDpruned.edit.mig3.{ext}", ext=['edges.gz','llik','modelcov.gz','treeout.gz','vertices.gz','cov.gz','covse.gz'])
+        
+         
+        
+rule to_treemix:
+    input:
+        "frem_f4.noN.LDpruned.edit.vcf.gz",
+        "frem_f4.clust"
+    output:
+        "frem_f4.noN.LDpruned.edit.treemix.frq.gz"
+    shell:
+        "./vcf2treemix.sh {input}"
+        
+rule treemix_testm:
+    input:
+        "frem_f4.noN.LDpruned.edit.treemix.frq.gz"
+    output:
+        "test_m/{root}/frem_f4.noN.LDpruned.edit.mig{i}.k{k}.rep{r}.edges.gz",
+        "test_m/{root}/frem_f4.noN.LDpruned.edit.mig{i}.k{k}.rep{r}.llik",
+        "test_m/{root}/frem_f4.noN.LDpruned.edit.mig{i}.k{k}.rep{r}.modelcov.gz",
+        "test_m/{root}/frem_f4.noN.LDpruned.edit.mig{i}.k{k}.rep{r}.treeout.gz",
+        "test_m/{root}/frem_f4.noN.LDpruned.edit.mig{i}.k{k}.rep{r}.vertices.gz",
+        "test_m/{root}/frem_f4.noN.LDpruned.edit.mig{i}.k{k}.rep{r}.cov.gz",
+        "test_m/{root}/frem_f4.noN.LDpruned.edit.mig{i}.k{k}.rep{r}.covse.gz"
+    shell:
+        "treemix -i {input} \
+        -m {wildcards.i} \
+        -o test_m/{wildcards.root}/frem_f4.noN.LDpruned.edit.mig{wildcards.i}.k{wildcards.k}.rep{wildcards.r} \
+        -root {wildcards.root} \
+        -bootstrap \
+        -k {wildcards.k} > treemix_{wildcards.root}_{wildcards.i}_log"
+        
+#rule treemix_final:
+ #   input:
+  #      "frem_f4.noN.LDpruned.edit.treemix.frq.gz"
+   # output:
+    #    "final_tree/frem_f4.noN.LDpruned.edit.mig3.edges.gz",
+     #   "final_tree/frem_f4.noN.LDpruned.edit.mig3.llik",
+      #  "final_tree/frem_f4.noN.LDpruned.edit.mig3.modelcov.gz",
+      # "final_tree/frem_f4.noN.LDpruned.edit.mig3.treeout.gz",
+      # "final_tree/frem_f4.noN.LDpruned.edit.mig3.vertices.gz",
+      # "final_tree/frem_f4.noN.LDpruned.edit.mig3.cov.gz",
+      # "final_tree/frem_f4.noN.LDpruned.edit.mig3.covse.gz"
+   #shell:
+    #    "treemix -i {input} \
+     #   -m 3 \
+      #  -o final_tree/frem_f4.noN.LDpruned.edit.mig3 \
+       # -root F._mexicanum \
+       #-bootstrap \
+       #-k 1000 > treemix_final_log"
+        
+        
+        
+        

@@ -1,0 +1,73 @@
+==========================================
+SLURM_JOB_ID = 9270706
+SLURM_NODELIST = cpu-10-66
+==========================================
+
+############### Job 9270706 summary ###############
+Name                : filter4_vcf
+User                : rjkenny
+Account             : adamgrp
+Partition           : med
+Nodes               : cpu-10-66
+Cores               : 12
+GPUs                : 0
+State               : COMPLETED
+ExitCode            : 0:0
+Submit              : 2024-01-02T10:52:20
+Start               : 2024-01-02T10:52:20
+End                 : 2024-01-02T13:03:22
+Reserved walltime   : 1-00:00:00
+Used walltime       :   02:11:02
+Used CPU time       :   02:10:14
+% User (Computation): 97.36%
+% System (I/O)      :  2.63%
+Mem reserved        : 30G
+Max Mem used        : 1.68M (cpu-10-66)
+Max Disk Write      : 58.81G (cpu-10-66)
+Max Disk Read       : 124.24G (cpu-10-66)
+
+############### Job 9270705 summary ###############
+Name                : filter3_vcf
+User                : rjkenny
+Account             : adamgrp
+Partition           : med
+Nodes               : cpu-10-18
+Cores               : 12
+GPUs                : 0
+State               : COMPLETED
+ExitCode            : 0:0
+Submit              : 2024-01-02T10:52:07
+Start               : 2024-01-02T10:52:08
+End                 : 2024-01-02T15:01:25
+Reserved walltime   : 1-00:00:00
+Used walltime       :   04:09:17
+Used CPU time       :   04:08:07
+% User (Computation): 98.56%
+% System (I/O)      :  1.44%
+Mem reserved        : 30G
+Max Mem used        : 1.68M (cpu-10-18)
+Max Disk Write      : 109.52G (cpu-10-18)
+Max Disk Read       : 124.13G (cpu-10-18)
+
+############### Job 9270704 summary ###############
+Name                : filter2_vcf
+User                : rjkenny
+Account             : adamgrp
+Partition           : high
+Nodes               : cpu-10-18
+Cores               : 12
+GPUs                : 0
+State               : RUNNING
+ExitCode            : --
+Submit              : 2024-01-02T10:51:14
+Start               : 2024-01-02T10:51:15
+End                 : --
+Reserved walltime   : 1-00:00:00
+Used walltime       :   04:18:43
+Used CPU time       :   04:17:33
+% User (Computation): 98.80%
+% System (I/O)      :  1.21%
+Mem reserved        : 30G
+Max Mem used        : 1.65M (cpu-10-18)
+Max Disk Write      : 114.71G (cpu-10-18)
+Max Disk Read       : 124.16G (cpu-10-18)

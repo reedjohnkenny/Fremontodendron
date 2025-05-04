@@ -1,0 +1,46 @@
+with open("pop_combs.txt") as f:
+        # Read lines from the file and store them in a list
+        POPS = [line.strip() for line in f]
+
+rule all:
+    input:POPS,
+        expand("{pop_comb}.mean", pop_comb = POPS), 
+        "all_pops.mean"
+        
+
+# Rule to run vctools --fst-weir-pop on every pairwise combination
+rule fst_weir_pop:
+    input:
+        population1= "{population1}",
+        population2= "{population2}"
+    output:
+        "{population1}_{population2}.weir.fst"
+    conda:"plink"
+    shell:
+        "vcftools --vcf ../../data/blm_frem_raw_no70.vcf \
+        --weir-fst-pop {input.population1} \
+        --weir-fst-pop {input.population2} \
+        --out ./{input.population1}_{input.population2}"
+        
+rule fst_mean:
+    input:
+        "{pop_comb}"
+    output:
+        "{pop_comb}.mean"
+    conda:"base"
+    shell:
+        "bash mean.sh {input}"
+
+rule cat: 
+    input:
+        expand("{pop_comb}.mean", pop_comb = POPS)
+    output:
+        "all_pops.mean"
+    conda:"base"
+    shell:
+        "cat *.mean > all_pops.mean"
+
+
+        
+        
+            

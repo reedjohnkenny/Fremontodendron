@@ -1,0 +1,88 @@
+FILES = ["blm_frem_nodec_all"]
+         
+rule all:
+    input:
+        expand("{file}.{k}.Q", file=FILES, k=range(1, 7))
+        
+rule vcf:
+    input:
+        "../../../data/QC/45-Fremontodendron_filteredQC.vcf.gz"
+    output:
+        "blm_frem_nodec_all.vcf"
+    conda:"filter_vcf"
+    shell:
+        "bcftools view -S nodec_all.txt -o blm_frem_nodec_all.vcf ../../../data/QC/45-Fremontodendron_filteredQC.vcf.gz"
+        
+        
+rule prune:
+    input:
+        "blm_frem_nodec_all.vcf"
+    output:
+        "plink/blm_frem_nodec_all.prune.in",
+        "plink/blm_frem_nodec_all.prune.out"
+    conda:"plink"
+    shell:
+        "plink --vcf {input} --double-id --allow-extra-chr \
+        --set-missing-var-ids @:# \
+        --indep-pairwise 50 10 0.1 --out plink/blm_frem_nodec_all"
+        
+
+rule pca:
+    input:
+        "blm_frem_nodec_all.vcf",
+        "plink/blm_frem_nodec_all.prune.in"
+    output:
+        "plink/{sample}.eigenval",
+        "plink/{sample}.eigenvec",
+        "plink/{sample}.fam",
+        "plink/{sample}.bed",
+        "plink/{sample}.bim"
+    conda:"plink"
+    shell:
+        "plink --vcf blm_frem_nodec_all.vcf --double-id --allow-extra-chr --set-missing-var-ids @:# \
+        --extract plink/blm_frem_nodec_all.prune.in \
+        --make-bed --pca --out plink/blm_frem_nodec_all"
+        
+rule bim:
+    input:
+        "plink/blm_frem_nodec_all.bim"
+    output:
+        "blm_frem_nodec_all.bim"
+    conda:"plink"
+    shell:
+        """awk "{{\\$1=\"0\";print \\$0}}" {input} > blm_frem_nodec_all.bim"""
+         
+rule bed:
+    input:
+        "plink/blm_frem_nodec_all.bed"
+    output:
+        "blm_frem_nodec_all.bed"
+    conda:"plink"
+    shell:
+        "cp {input} ./blm_frem_nodec_all.bed" 
+        
+rule fam:
+    input:
+        "plink/blm_frem_nodec_all.fam"
+    output:
+        "blm_frem_nodec_all.fam"
+    conda: "plink"
+    shell:
+        "cp {input} ./blm_frem_nodec_all.fam"
+        
+rule admix:
+    input:
+        "{sample}.bed",
+        "{sample}.bim",
+        "{sample}.fam"
+    output:
+        "{sample}.{k}.P",
+        "{sample}.{k}.Q"
+    conda: "admixture"
+    shell:
+        "admixture --cv=10 {wildcards.sample}.bed {wildcards.k} > \
+        {wildcards.sample}.{wildcards.k}.out"
+
+        
+        
+        

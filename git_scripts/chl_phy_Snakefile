@@ -1,0 +1,26 @@
+
+rule all:
+    input:
+        "blm_frem_raw.fasta.varsites.phy.treefile"
+
+
+rule vcf2phylip:
+    input:
+        "../../data/blm_frem_raw_chl.vcf"
+    output:
+        "blm_frem_raw_chl.min1.fasta"
+    conda:"base"
+    shell:
+        "python3 vcf2phylip.py -i {input} \
+ -f -r -m 1"
+        
+
+rule iqtree:
+    input:
+        "blm_frem_raw_chl.min1.fasta.varsites.phy"
+    output:
+        "blm_frem_raw.fasta.varsites.phy.treefile"
+    conda:"iqtree"
+    shell:
+        "iqtree -s {input} -m GTR+ASC -B 1000 -nt AUTO"
+

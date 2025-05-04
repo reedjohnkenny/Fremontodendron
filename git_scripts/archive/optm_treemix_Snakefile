@@ -1,0 +1,35 @@
+
+         
+rule all:
+    input:
+        expand("tree_out/blm_frem_geopop.noN.LDpruned.{i}.{ext}", i=['0','1','2','3','4','5'], ext=['edges.gz','llik','modelcov.gz','treeout.gz','vertices.gz','cov.gz','covse.gz'])
+
+        
+rule to_treemix:
+    input:
+        "blm_frem_geopop.noN.LDpruned.vcf.gz",
+        "blm_frem_geopop.clust"
+    output:
+        "blm_frem_geopop.noN.LDpruned.treemix.frq.gz"
+    shell:
+        "./vcf2treemix.sh {input}"
+        
+rule treemix:
+    input:
+        "blm_frem_geopop.noN.LDpruned.treemix.frq.gz"
+    output:
+        "tree_out/blm_frem_geopop.noN.LDpruned.{i}.edges.gz",
+        "tree_out/blm_frem_geopop.noN.LDpruned.{i}.llik",
+        "tree_out/blm_frem_geopop.noN.LDpruned.{i}.modelcov.gz",
+        "tree_out/blm_frem_geopop.noN.LDpruned.{i}.treeout.gz",
+        "tree_out/blm_frem_geopop.noN.LDpruned.{i}.vertices.gz",
+        "tree_out/blm_frem_geopop.noN.LDpruned.{i}.cov.gz",
+        "tree_out/blm_frem_geopop.noN.LDpruned.{i}.covse.gz"
+    shell:
+        "treemix -i {input} \
+        -m {wildcards.i} \
+        -o tree_out/blm_frem_geopop.noN.LDpruned.{wildcards.i} \
+        -k 500 > treemix_{wildcards.i}_log"
+        
+        
+        

@@ -1,0 +1,48 @@
+FILES = ["blm_frem_raw_no70"]
+         
+rule all:
+    input:
+        expand("{file}.{k}.meanQ", file=FILES, k = range(1, 10))
+        
+rule bim:
+    priority: 1
+    input:
+        "../plink_no70/{sample}.bim"
+    output:
+        "{sample}.bim"
+    shell:
+        """awk "{{\\$1=\"0\";print \\$0}}" {input} > {wildcards.sample}.bim"""
+         
+rule bed:
+    input:
+        "../plink_no70/{sample}.bed"
+    output:
+        "{sample}.bed"
+    shell:
+        "cp {input} ./{wildcards.sample}.bed" 
+        
+rule fam:
+    input:
+        "../plink_no70/{sample}.fam"
+    output:
+        "{sample}.fam"
+    shell:
+        "cp {input} ./{wildcards.sample}.fam"
+        
+        
+        
+rule structure:
+    input:
+        "{sample}.bed",
+        "{sample}.bim",
+        "{sample}.fam"
+    output:
+        "{sample}.{k}.meanP",
+        "{sample}.{k}.meanQ"
+    shell:
+        "structure.py -K {wildcards.k} --input {wildcards.sample} \
+        --output {wildcards.sample} \
+        --cv 10"
+        
+        
+        

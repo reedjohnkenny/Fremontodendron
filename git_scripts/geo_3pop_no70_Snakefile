@@ -1,0 +1,94 @@
+import random
+         
+rule all:
+    input:
+        "threepop.out",
+        "all.trees.contree"
+
+rule noN:
+    input:
+        "../../data/blm_frem_raw_no70.LDpruned.vcf.gz"
+    output:
+        "blm_frem_raw_no70.LDpruned.noN.vcf.gz"
+    conda:"filter_vcf"
+    shell:
+        "vcftools --gzvcf {input} --max-missing 1 --recode --stdout | gzip > {output}"
+        
+rule to_treemix:
+    input:
+        "blm_frem_raw_no70.LDpruned.noN.vcf.gz",
+        "blm_frem_raw_no70.clust"
+    output:
+        "blm_frem_raw_no70.LDpruned.noN.treemix.frq.gz"
+    conda:"plink"
+    shell:
+        "./vcf2treemix.sh {input}"
+
+        
+rule threepop:
+    input:
+        "blm_frem_raw_no70.LDpruned.noN.treemix.frq.gz"
+    output:
+        "threepop.out"
+    conda:"plink"
+    shell:
+        "threepop -i {input} \
+        -k 500 > threepop.out"
+        
+rule treemix_bootstraps:
+    input:
+        "blm_frem_raw_no70.LDpruned.noN.treemix.frq.gz"
+    output:
+        "bootstrap/blm_frem_raw_no70.LDpruned.noN.{i}.edges.gz",
+        "bootstrap/blm_frem_raw_no70.LDpruned.noN.{i}.llik",
+        "bootstrap/blm_frem_raw_no70.LDpruned.noN.{i}.modelcov.gz",
+        "bootstrap/blm_frem_raw_no70.LDpruned.noN.{i}.treeout.gz",
+        "bootstrap/blm_frem_raw_no70.LDpruned.noN.{i}.vertices.gz",
+        "bootstrap/blm_frem_raw_no70.LDpruned.noN.{i}.cov.gz",
+        "bootstrap/blm_frem_raw_no70.LDpruned.noN.{i}.covse.gz"
+    params:
+        seed_value=lambda wildcards: random.randint(1, 1000)  # Generate a random seed value for each invocation
+    conda:"plink"
+    shell:
+        "treemix -i {input} \
+        -bootstrap \
+        -seed {params.seed_value} \
+        -o bootstrap/blm_frem_raw_no70.LDpruned.noN.{wildcards.i} \
+        -k 500 > logs/treemix_{wildcards.i}_log"
+
+rule gunzip:
+    input:
+        "bootstrap/blm_frem_raw_no70.LDpruned.noN.{i}.treeout.gz"
+    output:
+        "bootstrap/blm_frem_raw_no70.LDpruned.noN.{i}.treeout"
+    conda:"plink"
+    shell:
+        "gunzip -c {input} > {output}"
+        
+rule cat_trees:
+    input:
+        expand("bootstrap/blm_frem_raw_no70.LDpruned.noN.{i}.treeout", i=range(1, 501))
+    output:
+        "all.trees"
+    conda:"plink"
+    shell:
+        "cat bootstrap/*.treeout > all.trees"
+        
+rule contree:
+    input:
+        "all.trees"
+    output:
+        "all.trees.contree"
+    conda: "iqtree"
+    shell:
+        "iqtree -con all.trees"
+        
+    
+
+        
+        
+        
+
+        
+        
+        

@@ -1,0 +1,65 @@
+
+         
+         
+rule all:
+    input:
+        expand("tree_out/blm_frem_raw_no70.noN.LDpruned.{i}.{ext}", i=['0','1','2'], ext=['edges.gz','llik','modelcov.gz','treeout.gz','vertices.gz','cov.gz','covse.gz']),
+        "threepop.out""
+        
+rule noN:
+    input:
+        "../../data/blm_frem_raw_no70.vcf"
+    output:
+        "blm_frem_raw_no70.noN.vcf.gz"
+    shell:
+        "vcftools --vcf {input} --max-missing 1 --recode --stdout | gzip > {output}"
+         
+rule LD_prune:
+    input:
+        "blm_frem_raw_no70.noN.vcf.gz"
+    output:
+        "blm_frem_raw_no70.noN.LDpruned.vcf.gz"
+    shell:
+        "./scripts/ldPruning.sh {input}" 
+        
+rule to_treemix:
+    input:
+        "blm_frem_raw_no70.noN.LDpruned.vcf.gz",
+        "blm_frem_raw_no70.clust"
+    output:
+        "blm_frem_raw_no70.noN.LDpruned.treemix.frq.gz"
+    shell:
+        "./scripts/vcf2treemix.sh {input}"
+        
+rule treemix:
+    input:
+        "blm_frem_raw_no70.noN.LDpruned.treemix.frq.gz"
+    output:
+        "tree_out/blm_frem_raw_no70.noN.LDpruned.{i}.edges.gz",
+        "tree_out/blm_frem_raw_no70.noN.LDpruned.{i}.llik",
+        "tree_out/blm_frem_raw_no70.noN.LDpruned.{i}.modelcov.gz",
+        "tree_out/blm_frem_raw_no70.noN.LDpruned.{i}.treeout.gz",
+        "tree_out/blm_frem_raw_no70.noN.LDpruned.{i}.vertices.gz",
+        "tree_out/blm_frem_raw_no70.noN.LDpruned.{i}.cov.gz",
+        "tree_out/blm_frem_raw_no70.noN.LDpruned.{i}.covse.gz"
+    shell:
+        "treemix -i {input} \
+        -m {wildcards.i} \
+        -o tree_out/blm_frem_raw_no70.noN.LDpruned.{wildcards.i} \
+        -root cal \
+        -bootstrap \
+        -k 500 > treemix_{wildcards.i}_log"
+        
+rule threepop:
+    input:
+        "blm_frem_raw_no70.noN.LDpruned.treemix.frq.gz"
+    output:
+        "threepop.out"
+    conda:"plink"
+    shell:
+        "threepop -i {input} \
+        -k 500 > threepop.out"
+        
+        
+        
+        
